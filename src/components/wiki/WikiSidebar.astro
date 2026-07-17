@@ -1,6 +1,7 @@
 ---
+import WikiTreeBranch from '@components/wiki/WikiTreeBranch.astro';
 import type { WikiEntry } from '@lib/wiki';
-import { getPublicWikiEntries, groupWikiEntries, sitePath, wikiPath } from '@lib/wiki';
+import { buildWikiNavigationTree, getPublicWikiEntries, sitePath } from '@lib/wiki';
 
 interface Props {
   entries?: WikiEntry[];
@@ -8,28 +9,41 @@ interface Props {
 }
 
 const { entries = await getPublicWikiEntries(), activeId } = Astro.props;
-const groups = groupWikiEntries(entries);
+const tree = buildWikiNavigationTree(entries, activeId);
 const base = import.meta.env.BASE_URL;
 const baseHref = (path: string) => sitePath(path, base);
+const shortcuts = [
+  { href: '/', icon: '⌂', label: 'Wiki 首页' },
+  { href: '/domains/', icon: '域', label: '知识领域' },
+  { href: '/knowledge-graph/', icon: '◎', label: '知识图谱' },
+  { href: '/wiki-tags/', icon: '#', label: '标签索引' },
+  { href: '/learning-paths/', icon: '→', label: '学习路线' },
+];
 ---
 
 <aside class="wiki-sidebar tablet:hidden" aria-label="Wiki 导航">
-  <p class="wiki-sidebar__label">知识库</p>
-  <a href={baseHref('/')}><span>Wiki 首页</span><span>⌂</span></a>
-  <a href={baseHref('/domains/')}><span>知识领域</span><span>{groups.size}</span></a>
-  <a href={baseHref('/knowledge-graph/')}><span>知识图谱</span><span>◎</span></a>
-  <a href={baseHref('/wiki-tags/')}><span>标签索引</span><span>#</span></a>
-  <a href={baseHref('/learning-paths/')}><span>学习路线</span><span>→</span></a>
+  <header class="wiki-sidebar__header">
+    <a class="wiki-sidebar__brand" href={baseHref('/')}>
+      <span class="wiki-sidebar__mark" aria-hidden="true">W</span>
+      <span>个人知识库</span>
+    </a>
+    <span class="wiki-sidebar__total" title={`${entries.length} 个知识点`}>{entries.length}</span>
+  </header>
 
-  {[...groups].map(([category, categoryEntries]) => (
-    <details class="wiki-sidebar__group" open={categoryEntries.some((entry) => entry.id === activeId)}>
-      <summary><span>{category}</span><span>{categoryEntries.length}</span></summary>
-      {categoryEntries.map((entry) => (
-          <a href={wikiPath(entry, base)} aria-current={entry.id === activeId ? 'page' : undefined}>
-            <span>{entry.data.title}</span>
-            <span>{entry.data.status === 'complete' ? '●' : '○'}</span>
-          </a>
-        ))}
-    </details>
-  ))}
+  <nav class="wiki-sidebar__shortcuts" aria-label="常用入口">
+    {shortcuts.map((item) => (
+      <a href={baseHref(item.href)} title={item.label} aria-label={item.label}>
+        <span aria-hidden="true">{item.icon}</span>
+      </a>
+    ))}
+  </nav>
+
+  <div class="wiki-sidebar__section-label">
+    <span>知识树</span>
+    <span>{tree.length} 个领域</span>
+  </div>
+
+  <nav class="wiki-tree" aria-label="知识目录">
+    {tree.map((node) => <WikiTreeBranch node={node} activeId={activeId} base={base} />)}
+  </nav>
 </aside>

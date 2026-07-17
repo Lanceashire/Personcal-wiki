@@ -1,0 +1,42 @@
+---
+import type { WikiNavigationNode } from '@lib/wiki';
+import { wikiPath } from '@lib/wiki';
+
+interface Props {
+  node: WikiNavigationNode;
+  activeId?: string;
+  base: string;
+  depth?: number;
+}
+
+const { node, activeId, base, depth = 0 } = Astro.props;
+---
+
+<details class="wiki-tree__branch" open={node.active} style={`--tree-depth: ${depth}`}>
+  <summary>
+    <span class="wiki-tree__chevron" aria-hidden="true"></span>
+    <svg class="wiki-tree__folder" viewBox="0 0 16 14" aria-hidden="true">
+      <path d="M1.5 3.5h5l1.4 1.6h6.6v6.7a.7.7 0 0 1-.7.7H2.2a.7.7 0 0 1-.7-.7V3.5Z"></path>
+      <path d="M1.5 3.5v-1a.7.7 0 0 1 .7-.7h3.5l1.4 1.7"></path>
+    </svg>
+    <span class="wiki-tree__name">{node.label}</span>
+    <span class="wiki-tree__count">{node.count}</span>
+  </summary>
+
+  <div class="wiki-tree__children">
+    {node.children.map((child) => <Astro.self node={child} activeId={activeId} base={base} depth={depth + 1} />)}
+    {node.entries.map((entry) => (
+      <a
+        class="wiki-tree__item"
+        href={wikiPath(entry, base)}
+        aria-current={entry.id === activeId ? 'page' : undefined}
+        title={entry.data.title}
+        style={`--tree-depth: ${depth + 1}`}
+      >
+        <span class="wiki-tree__note" aria-hidden="true"></span>
+        <span class="wiki-tree__name">{entry.data.title}</span>
+        <span class={`wiki-tree__status wiki-tree__status--${entry.data.status}`} aria-hidden="true"></span>
+      </a>
+    ))}
+  </div>
+</details>
