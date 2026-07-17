@@ -9,7 +9,10 @@ const contentRoot = path.join(projectRoot, 'content');
 const files = globSync('**/*.{md,mdx}', { cwd: contentRoot, nodir: true });
 const errors: string[] = [];
 const requiredFields = ['title', 'description', 'category', 'type', 'difficulty', 'status', 'public', 'created', 'updated'];
-const requiredSections = ['条目概览', '为什么需要', '直观理解', '正式定义', '完整计算示例', '常见误区'];
+const requiredSections = ['条目概览'];
+const validTypes = new Set(['concept', 'algorithm', 'method', 'tool', 'project', 'reference']);
+const validDifficulties = new Set(['beginner', 'intermediate', 'advanced']);
+const validStatuses = new Set(['seedling', 'developing', 'complete', 'review-needed']);
 const secretPatterns = [
   { label: 'Windows 用户绝对路径', pattern: /[A-Za-z]:\\Users\\[^\s]+/ },
   { label: 'macOS 用户绝对路径', pattern: /\/Users\/[^\s]+/ },
@@ -28,10 +31,11 @@ const records = files.map((relativePath) => {
 });
 
 const index = new Map<string, string>();
+const basenames = new Map<string, string[]>();
 for (const record of records) {
   const slug = record.relativePath.replace(/\.(md|mdx)$/i, '');
   const aliases = Array.isArray(record.data.aliases) ? record.data.aliases : [];
-  const keys = [record.data.title, ...aliases, slug, slug.split('/').at(-1)].filter(Boolean).map(String);
+  const keys = [record.data.title, ...aliases, slug].filter(Boolean).map(String);
   for (const key of keys) {
     const normalized = normalizeWikiKey(key);
     const existing = index.get(normalized);
@@ -40,6 +44,14 @@ for (const record of records) {
     }
     index.set(normalized, record.relativePath);
   }
+  const basename = slug.split('/').at(-1);
+  if (basename) {
+    const basenameKey = normalizeWikiKey(basename);
+    basenames.set(basenameKey, [...(basenames.get(basenameKey) ?? []), record.relativePath]);
+  }
+}
+for (const [key, matches] of basenames) {
+  if (matches.length === 1 && !index.has(key)) index.set(key, matches[0]);
 }
 
 for (const record of records) {
@@ -48,11 +60,22 @@ for (const record of records) {
   }
   if (record.data.public !== true) errors.push(`${record.relativePath}: 公开仓库只允许 public: true 的条目。`);
   if (!Array.isArray(record.data.tags)) errors.push(`${record.relativePath}: tags 必须是数组。`);
+  if (!Array.isArray(record.data.aliases)) errors.push(`${record.relativePath}: aliases 必须是数组。`);
+  if (!Array.isArray(record.data.subcategories)) errors.push(`${record.relativePath}: subcategories 必须是数组。`);
   if (!Array.isArray(record.data.prerequisites)) errors.push(`${record.relativePath}: prerequisites 必须是数组。`);
   if (!Array.isArray(record.data.related)) errors.push(`${record.relativePath}: related 必须是数组。`);
+  if (!Array.isArray(record.data.next)) errors.push(`${record.relativePath}: next 必须是数组。`);
+  if (!validTypes.has(String(record.data.type))) errors.push(`${record.relativePath}: type 不在允许范围内。`);
+  if (!validDifficulties.has(String(record.data.difficulty)))
+    errors.push(`${record.relativePath}: difficulty 不在允许范围内。`);
+  if (!validStatuses.has(String(record.data.status))) errors.push(`${record.relativePath}: status 不在允许范围内。`);
+  if (record.body.trim().length < 150) errors.push(`${record.relativePath}: 正文过短，无法形成有效知识条目。`);
 
   for (const section of requiredSections) {
     if (!new RegExp(`^##\\s+${section}`, 'm').test(record.body)) errors.push(`${record.relativePath}: 缺少“${section}”章节。`);
+  }
+  if (record.data.type !== 'reference' && (record.body.match(/^##\s+/gm) ?? []).length < 2) {
+    errors.push(`${record.relativePath}: 非参考条目至少需要一个“条目概览”之外的二级章节。`);
   }
 
   for (const { label, pattern } of secretPatterns) {

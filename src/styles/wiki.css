@@ -153,6 +153,61 @@
   font-weight: 900;
 }
 
+.wiki-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.wiki-section-heading .wiki-section-title {
+  margin: 0.2rem 0 1rem;
+}
+
+.wiki-domain-group {
+  margin-top: 2rem;
+}
+
+.wiki-learning-groups {
+  display: grid;
+  gap: 1rem;
+}
+
+.wiki-learning-group {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, hsl(var(--primary)) 17%, transparent);
+  border-radius: 1.1rem;
+}
+
+.wiki-learning-group > summary {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+  background: rgba(240, 143, 189, 0.08);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.wiki-path-list {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 1rem;
+  list-style: none;
+}
+
+.wiki-path-list .wiki-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.wiki-path-list .wiki-chip-row {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
 .wiki-sidebar {
   position: sticky;
   top: 0;
@@ -171,6 +226,32 @@
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.wiki-sidebar__group {
+  margin-top: 0.65rem;
+}
+
+.wiki-sidebar__group summary {
+  display: flex;
+  justify-content: space-between;
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  list-style: none;
+}
+
+.wiki-sidebar__group summary::-webkit-details-marker {
+  display: none;
+}
+
+.wiki-sidebar__group summary:hover {
+  background: rgba(240, 143, 189, 0.1);
+  color: hsl(var(--primary));
 }
 
 .wiki-sidebar a {
@@ -233,6 +314,140 @@
   color: hsl(var(--muted-foreground));
 }
 
+.knowledge-graph {
+  --knowledge-node-stroke: rgba(255, 255, 255, 0.92);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, hsl(var(--primary)) 24%, transparent);
+  border-radius: 1.35rem;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(240, 143, 189, 0.15), transparent 32%),
+    radial-gradient(circle at 82% 90%, rgba(142, 175, 238, 0.15), transparent 35%),
+    color-mix(in srgb, var(--gradient-bg-start) 96%, transparent);
+  box-shadow:
+    inset 0 0 70px rgba(130, 145, 190, 0.05),
+    0 18px 45px rgba(31, 36, 54, 0.06);
+}
+
+.dark .knowledge-graph {
+  --knowledge-node-stroke: rgba(24, 25, 34, 0.92);
+  background:
+    radial-gradient(circle at 18% 10%, rgba(240, 143, 189, 0.1), transparent 32%),
+    radial-gradient(circle at 82% 90%, rgba(142, 175, 238, 0.11), transparent 35%), rgba(23, 25, 34, 0.88);
+}
+
+.knowledge-graph__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-bottom: 1px solid color-mix(in srgb, hsl(var(--primary)) 15%, transparent);
+  padding: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8rem;
+}
+
+.knowledge-graph__toolbar label {
+  flex: 1;
+}
+
+.knowledge-graph__toolbar input,
+.knowledge-graph__toolbar select,
+.knowledge-graph__toolbar button {
+  border: 1px solid color-mix(in srgb, hsl(var(--primary)) 22%, transparent);
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  background: color-mix(in srgb, var(--gradient-bg-start) 92%, transparent);
+  color: inherit;
+}
+
+.knowledge-graph__toolbar input {
+  width: min(100%, 19rem);
+}
+
+.knowledge-graph__toolbar button {
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.knowledge-graph__canvas {
+  display: block;
+  width: 100%;
+  height: min(64vh, 42rem);
+  touch-action: none;
+  cursor: grab;
+}
+
+.knowledge-graph--compact .knowledge-graph__canvas {
+  height: min(48vh, 27rem);
+}
+
+.knowledge-graph__canvas:active {
+  cursor: grabbing;
+}
+
+.knowledge-node text {
+  fill: currentColor;
+  font-size: 12px;
+  font-weight: 800;
+  paint-order: stroke;
+  stroke: var(--gradient-bg-start);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.knowledge-edge {
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.knowledge-edge--prerequisite,
+.knowledge-edge--next {
+  stroke: #e786b5;
+}
+
+.knowledge-edge--related,
+.knowledge-edge--mention {
+  stroke: #82a9df;
+  stroke-dasharray: 4 5;
+}
+
+#knowledge-arrow path {
+  fill: #e786b5;
+}
+
+.knowledge-graph__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  border-top: 1px solid color-mix(in srgb, hsl(var(--primary)) 15%, transparent);
+  padding: 0.7rem 0.9rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.74rem;
+  list-style: none;
+}
+
+.knowledge-graph__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.knowledge-graph__legend i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+}
+
+.knowledge-graph__line {
+  width: 1.25rem;
+  border-top: 2px solid #e786b5;
+}
+
+.knowledge-graph__line--dashed {
+  border-color: #82a9df;
+  border-top-style: dashed;
+}
+
 @media (max-width: 768px) {
   .wiki-sidebar {
     display: none;
@@ -242,5 +457,23 @@
   .wiki-stats,
   .wiki-infobox {
     grid-template-columns: 1fr;
+  }
+
+  .wiki-section-heading,
+  .knowledge-graph__toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .knowledge-graph__toolbar input {
+    width: 100%;
+  }
+
+  .wiki-path-list .wiki-card {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-path-list .wiki-chip-row {
+    justify-content: flex-start;
   }
 }

@@ -10,6 +10,8 @@
 - 严格的 Wiki Frontmatter schema；只有 `public: true` 可以进入仓库和构建。
 - 支持 `[[条目]]`、`[[条目|别名]]`、`[[条目#标题]]` 与 `![[image.png]]`。
 - 自动生成知识领域、标签索引、学习路线、正向关系和反向链接。
+- 提供与主题一致的 Obsidian 风格全库知识图谱，以及每篇条目的局部关系图。
+- `pnpm import:obsidian` 可重复整理本地课程笔记，自动分类、改写链接并过滤私有路径与常见凭据。
 - 首页是知识库入口，不再是博客时间线。
 - 内容验证会阻止断链、缺失资源、私有路径和常见凭据进入部署。
 - GitHub Actions 自动执行类型检查、测试、内容验证、静态构建和 GitHub Pages 部署。
@@ -20,6 +22,7 @@
 content/                       # 允许公开的 Wiki Markdown
 src/lib/wiki/                  # Wikilink、关系图与内容查询
 src/pages/wiki/                # 条目页面
+src/pages/knowledge-graph.astro # 交互式全库知识图谱
 src/pages/domains/             # 知识领域
 src/pages/wiki-tags/           # 标签索引
 scripts/validate-content.ts    # 内容与隐私验证
@@ -37,6 +40,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 pnpm check
 pnpm test
+pnpm import:obsidian
 pnpm validate:content
 pnpm build
 pnpm validate:dist
@@ -46,11 +50,12 @@ pnpm validate:dist
 
 ## 内容维护
 
-1. 只把明确允许公开的笔记放入 `content/`。
-2. 按 [CONTENT_SCHEMA.md](./CONTENT_SCHEMA.md) 填写 Frontmatter。
+1. 只把明确允许公开的笔记放入 `content/`，或运行 `pnpm import:obsidian -- --vault <Vault 路径>` 批量导入。
+2. 按 [CONTENT_SCHEMA.md](./CONTENT_SCHEMA.md) 填写 Frontmatter，并用 `prerequisites`、`related`、`next` 与正文 Wikilink 建立关系。
 3. 按 [WIKI_STYLE_GUIDE.md](./WIKI_STYLE_GUIDE.md) 整理正文。
-4. 提交后由 Agent 读取 Git Diff，进行最小范围维护并运行完整验证。
-5. 合并到 `main` 后由 GitHub Actions 自动部署。
+4. 查看 [Obsidian 导入报告](./docs/obsidian-import-report.md)，处理尚未对应到公开条目的引用。
+5. 提交后由 Agent 读取 Git Diff，进行最小范围维护并运行完整验证。
+6. 合并到 `main` 后由 GitHub Actions 自动部署。
 
 完整的 Agent 工作约束见 [AGENTS.md](./AGENTS.md)，架构见 [ARCHITECTURE.md](./ARCHITECTURE.md)。
 

@@ -12,6 +12,7 @@
     "astro": "astro",
     "check": "astro check",
     "test": "tsx --test tests/wiki/graph.test.ts",
+    "import:obsidian": "tsx scripts/import-obsidian.ts",
     "validate:content": "tsx scripts/validate-content.ts",
     "validate:dist": "tsx scripts/validate-dist.ts",
     "verify": "pnpm check && pnpm test && pnpm validate:content && pnpm build && pnpm validate:dist",

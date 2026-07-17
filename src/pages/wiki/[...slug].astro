@@ -2,12 +2,15 @@
 import { render } from 'astro:content';
 import CustomContent from '@components/common/CustomContent.astro';
 import Cover from '@components/ui/cover/Cover.astro';
+import KnowledgeGraph from '@components/wiki/KnowledgeGraph';
 import WikiSidebar from '@components/wiki/WikiSidebar.astro';
 import Layout from '@layouts/Layout.astro';
 import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
 import {
+  buildKnowledgeGraphData,
   buildWikiGraph,
   buildWikiIndex,
+  getLocalKnowledgeGraph,
   getPublicWikiEntries,
   getWikiSlug,
   resolveWikiEntry,
@@ -26,10 +29,12 @@ const entry = entries.find((candidate) => candidate.id === entryId);
 if (!entry) throw new Error(`Wiki entry not found: ${entryId}`);
 
 const { Content } = await render(entry);
+const base = import.meta.env.BASE_URL;
 const index = buildWikiIndex(entries);
 const graph = buildWikiGraph(entries);
+const knowledgeGraph = buildKnowledgeGraphData(entries, base);
+const localGraph = getLocalKnowledgeGraph(knowledgeGraph, getWikiSlug(entry));
 const node = graph.get(getWikiSlug(entry));
-const base = import.meta.env.BASE_URL;
 const resolveRefs = (references: string[]) =>
   references.map((reference) => ({ reference, entry: resolveWikiEntry(reference, index) }));
 const prerequisites = resolveRefs(entry.data.prerequisites);
@@ -77,6 +82,17 @@ const jsonLd = {
       <article class="prose md:prose-sm dark:prose-invert max-w-none" data-pagefind-body>
         <CustomContent><Content /></CustomContent>
       </article>
+
+      <section class="mt-8" aria-labelledby="local-graph-title">
+        <div class="wiki-section-heading">
+          <div>
+            <p class="wiki-kicker">LOCAL GRAPH</p>
+            <h2 id="local-graph-title" class="wiki-section-title">这个知识点如何连接</h2>
+          </div>
+          <a class="wiki-button" href={sitePath('knowledge-graph/', base)}>打开完整图谱</a>
+        </div>
+        <KnowledgeGraph client:load {...localGraph} focusId={getWikiSlug(entry)} compact />
+      </section>
 
       <section class="wiki-grid mt-8" aria-label="知识关系">
         <div class="wiki-panel">

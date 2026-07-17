@@ -3,10 +3,12 @@ import Cover from '@components/ui/cover/Cover.astro';
 import WikiSidebar from '@components/wiki/WikiSidebar.astro';
 import Layout from '@layouts/Layout.astro';
 import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
-import { buildWikiIndex, getPublicWikiEntries, resolveWikiEntry, wikiPath } from '@lib/wiki';
+import { buildWikiIndex, getPublicWikiEntries, getWikiSlug, groupWikiEntries, resolveWikiEntry, wikiPath } from '@lib/wiki';
 
 const entries = await getPublicWikiEntries();
 const index = buildWikiIndex(entries);
+const groups = groupWikiEntries(entries);
+for (const group of groups.values()) group.sort((a, b) => getWikiSlug(a).localeCompare(getWikiSlug(b), 'zh-CN'));
 const base = import.meta.env.BASE_URL;
 ---
 
@@ -17,20 +19,29 @@ const base = import.meta.env.BASE_URL;
     <main class="wiki-shell bg-gradient-start shadow-box p-5 md:p-4">
       <p class="wiki-kicker">Learning Paths</p><h1 class="wiki-title text-5xl">学习路线</h1>
       <p class="wiki-lede">路线只依据 Frontmatter 中明确声明的前置关系生成，不把模型猜测当作事实。</p>
-      <section class="wiki-grid mt-8" data-pagefind-body>
-        {entries.map((entry) => (
-          <div class="wiki-card">
-            <h2><a href={wikiPath(entry, base)}>{entry.data.title}</a></h2>
-            <p>{entry.data.description}</p>
-            <div class="wiki-chip-row">
-              {entry.data.prerequisites.length === 0 ? <span class="wiki-chip">起点条目</span> : entry.data.prerequisites.map((reference) => {
-                const target = resolveWikiEntry(reference, index);
-                return target ? <a class="wiki-chip" href={wikiPath(target, base)}>先学：{reference}</a> : <span class="wiki-chip">待补：{reference}</span>;
-              })}
-            </div>
-          </div>
+      <div class="wiki-learning-groups mt-8" data-pagefind-body>
+        {[...groups].map(([category, categoryEntries]) => (
+          <details class="wiki-learning-group" open>
+            <summary><span>{category}</span><span>{categoryEntries.length} 个知识点</span></summary>
+            <ol class="wiki-path-list">
+              {categoryEntries.map((entry) => (
+                <li class="wiki-card">
+                  <div>
+                    <h2><a href={wikiPath(entry, base)}>{entry.data.title}</a></h2>
+                    <p>{entry.data.description}</p>
+                  </div>
+                  <div class="wiki-chip-row">
+                    {entry.data.prerequisites.length === 0 ? <span class="wiki-chip">学习起点</span> : entry.data.prerequisites.map((reference) => {
+                      const target = resolveWikiEntry(reference, index);
+                      return target ? <a class="wiki-chip" href={wikiPath(target, base)}>← {reference}</a> : <span class="wiki-chip">待补：{reference}</span>;
+                    })}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </details>
         ))}
-      </section>
+      </div>
     </main>
   </TwoColumnLayout>
 </Layout>

@@ -15,6 +15,22 @@ export interface WikiGraphNode {
   unresolved: string[];
 }
 
+export type KnowledgeEdgeKind = 'prerequisite' | 'next' | 'related' | 'mention';
+
+export interface KnowledgeGraphData {
+  nodes: Array<{
+    id: string;
+    title: string;
+    category: string;
+    url: string;
+  }>;
+  edges: Array<{
+    source: string;
+    target: string;
+    kind: KnowledgeEdgeKind;
+  }>;
+}
+
 export function normalizeWikiKey(value: string): string {
   return value
     .normalize('NFKC')
@@ -50,11 +66,17 @@ export function extractWikiLinks(markdown: string): ParsedWikiLink[] {
 
 export function buildWikiIndex(entries: WikiEntry[]): Map<string, WikiEntry> {
   const index = new Map<string, WikiEntry>();
+  const basenames = new Map<string, WikiEntry[]>();
   for (const entry of entries) {
     const slug = getWikiSlug(entry);
     const basename = slug.split('/').at(-1) ?? slug;
-    const keys = [entry.data.title, ...entry.data.aliases, slug, basename];
+    const keys = [entry.data.title, ...entry.data.aliases, slug];
     for (const key of keys) index.set(normalizeWikiKey(key), entry);
+    const basenameKey = normalizeWikiKey(basename);
+    basenames.set(basenameKey, [...(basenames.get(basenameKey) ?? []), entry]);
+  }
+  for (const [key, matches] of basenames) {
+    if (matches.length === 1 && !index.has(key)) index.set(key, matches[0]);
   }
   return index;
 }
@@ -96,6 +118,53 @@ export function buildWikiGraph(entries: WikiEntry[]): Map<string, WikiGraphNode>
   }
 
   return nodes;
+}
+
+export function buildKnowledgeGraphData(entries: WikiEntry[], base = '/'): KnowledgeGraphData {
+  const index = buildWikiIndex(entries);
+  const nodes = entries.map((entry) => ({
+    id: getWikiSlug(entry),
+    title: entry.data.title,
+    category: entry.data.category,
+    url: wikiPath(entry, base),
+  }));
+  const edges = new Map<string, KnowledgeGraphData['edges'][number]>();
+  const addEdge = (source: WikiEntry, target: WikiEntry | undefined, kind: KnowledgeEdgeKind) => {
+    if (!target || source.id === target.id) return;
+    const edge = { source: getWikiSlug(source), target: getWikiSlug(target), kind };
+    const key = `${edge.source}\u0000${edge.target}`;
+    const priority: Record<KnowledgeEdgeKind, number> = { prerequisite: 4, next: 3, related: 2, mention: 1 };
+    const current = edges.get(key);
+    if (!current || priority[kind] > priority[current.kind]) edges.set(key, edge);
+  };
+
+  for (const entry of entries) {
+    for (const reference of entry.data.prerequisites) {
+      const prerequisite = resolveWikiEntry(reference, index);
+      if (prerequisite) addEdge(prerequisite, entry, 'prerequisite');
+    }
+    for (const reference of entry.data.next) addEdge(entry, resolveWikiEntry(reference, index), 'next');
+    for (const reference of entry.data.related) addEdge(entry, resolveWikiEntry(reference, index), 'related');
+    for (const link of extractWikiLinks(entry.body ?? '')) addEdge(entry, resolveWikiEntry(link.target, index), 'mention');
+  }
+
+  return { nodes, edges: [...edges.values()] };
+}
+
+export function getLocalKnowledgeGraph(graph: KnowledgeGraphData, focusId: string, depth = 1): KnowledgeGraphData {
+  const included = new Set([focusId]);
+  for (let level = 0; level < depth; level += 1) {
+    for (const edge of graph.edges) {
+      if (included.has(edge.source) || included.has(edge.target)) {
+        included.add(edge.source);
+        included.add(edge.target);
+      }
+    }
+  }
+  return {
+    nodes: graph.nodes.filter((node) => included.has(node.id)),
+    edges: graph.edges.filter((edge) => included.has(edge.source) && included.has(edge.target)),
+  };
 }
 
 export function groupWikiEntries(entries: WikiEntry[]): Map<string, WikiEntry[]> {
