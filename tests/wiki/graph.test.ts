@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { WikiEntry } from '../../src/lib/wiki/graph';
 import { buildWikiGraph, buildWikiIndex, extractWikiLinks, parseWikiLink, resolveWikiEntry } from '../../src/lib/wiki/graph';
+import { buildWikiNavigationTree } from '../../src/lib/wiki/tree';
 
 function entry(id: string, title: string, body: string, aliases: string[] = []): WikiEntry {
   return {
@@ -26,6 +27,13 @@ function entry(id: string, title: string, body: string, aliases: string[] = []):
       next: [],
     },
   } as WikiEntry;
+}
+
+function nestedEntry(id: string, title: string, category: string, subcategories: string[]): WikiEntry {
+  const result = entry(id, title, '');
+  result.data.category = category;
+  result.data.subcategories = subcategories;
+  return result;
 }
 
 test('parses aliases and heading anchors', () => {
@@ -70,4 +78,23 @@ test('builds forward and reverse relationships', () => {
     graph.get('mathematics/vector')?.linkedFrom.map((item) => item.data.title),
     ['线性回归'],
   );
+});
+
+test('builds a nested navigation tree and opens only the active path', () => {
+  const overview = nestedEntry('course/01/overview', 'Overview', 'Course', ['Chapter 1']);
+  const detail = nestedEntry('course/01/topic/detail', 'Detail', 'Course', ['Chapter 1', 'Topic']);
+  const reference = nestedEntry('course/index', 'Index', 'Course', []);
+  const [course] = buildWikiNavigationTree([detail, reference, overview], detail.id);
+
+  assert.equal(course.label, 'Course');
+  assert.equal(course.count, 3);
+  assert.equal(course.active, true);
+  assert.deepEqual(
+    course.entries.map((item) => item.data.title),
+    ['Index'],
+  );
+  assert.equal(course.children[0].label, 'Chapter 1');
+  assert.equal(course.children[0].active, true);
+  assert.equal(course.children[0].children[0].label, 'Topic');
+  assert.equal(course.children[0].children[0].active, true);
 });
