@@ -50,6 +50,14 @@ test('resolves titles and aliases case-insensitively', () => {
   assert.equal(resolveWikiEntry('向量', index), vector);
 });
 
+test('does not resolve an ambiguous basename to an arbitrary entry', () => {
+  const first = entry('course-a/99-review', '课程 A 复习', '');
+  const second = entry('course-b/99-review', '课程 B 复习', '');
+  const index = buildWikiIndex([first, second]);
+  assert.equal(resolveWikiEntry('99-review', index), undefined);
+  assert.equal(resolveWikiEntry('course-a/99-review', index), first);
+});
+
 test('builds forward and reverse relationships', () => {
   const vector = entry('mathematics/vector', '向量', '');
   const regression = entry('ai/linear-regression', '线性回归', '先学习 [[向量]]。');

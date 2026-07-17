@@ -13,6 +13,11 @@ export async function getStaticPaths() {
 const { category } = Astro.props;
 const entries = await getPublicWikiEntries();
 const domainEntries = entries.filter((entry) => entry.data.category === category);
+const subcategoryGroups = new Map<string, typeof domainEntries>();
+for (const entry of domainEntries) {
+  const subcategory = entry.data.subcategories[0] ?? '基础与总览';
+  subcategoryGroups.set(subcategory, [...(subcategoryGroups.get(subcategory) ?? []), entry]);
+}
 const base = import.meta.env.BASE_URL;
 ---
 
@@ -24,14 +29,24 @@ const base = import.meta.env.BASE_URL;
       <p class="wiki-kicker">Knowledge Domain</p>
       <h1 class="wiki-title text-5xl">{category}</h1>
       <p class="wiki-lede">本领域收录 {domainEntries.length} 个公开条目。</p>
-      <section class="wiki-grid mt-8" data-pagefind-body>
-        {domainEntries.map((entry) => (
-          <a class="wiki-card no-underline" href={wikiPath(entry, base)}>
-            <h2>{entry.data.title}</h2><p>{entry.data.description}</p>
-            <div class="wiki-card__meta"><span>{entry.data.type}</span><span>{entry.data.difficulty}</span><span>{entry.data.status}</span></div>
-          </a>
+      <div data-pagefind-body>
+        {[...subcategoryGroups].map(([subcategory, group]) => (
+          <section class="wiki-domain-group">
+            <div class="wiki-section-heading">
+              <h2 class="wiki-section-title">{subcategory}</h2>
+              <span class="wiki-chip">{group.length} 篇</span>
+            </div>
+            <div class="wiki-grid">
+              {group.map((entry) => (
+                <a class="wiki-card no-underline" href={wikiPath(entry, base)}>
+                  <h3>{entry.data.title}</h3><p>{entry.data.description}</p>
+                  <div class="wiki-card__meta"><span>{entry.data.type}</span><span>{entry.data.difficulty}</span><span>{entry.data.status}</span></div>
+                </a>
+              ))}
+            </div>
+          </section>
         ))}
-      </section>
+      </div>
     </main>
   </TwoColumnLayout>
 </Layout>

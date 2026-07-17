@@ -14,6 +14,7 @@ const htmlFiles = globSync('**/*.html', { cwd: distRoot, nodir: true });
 const requiredSuffixes = [
   'index.html',
   'domains/index.html',
+  'knowledge-graph/index.html',
   'learning-paths/index.html',
   'wiki/artificial-intelligence/linear-regression/index.html',
 ];
@@ -37,10 +38,10 @@ for (const htmlFile of htmlFiles) {
   for (const pattern of forbidden) {
     if (pattern.test(html)) errors.push(`${htmlFile}: 构建产物包含疑似私有路径或凭据。`);
   }
-  if (/href="\/(wiki|domains|learning-paths|wiki-tags)\//.test(html)) {
+  if (/href="\/(wiki|domains|knowledge-graph|learning-paths|wiki-tags)\//.test(html)) {
     errors.push(`${htmlFile}: 存在未添加 GitHub Pages base path 的 Wiki 链接。`);
   }
-  if (/\/Personcal-wiki(?:wiki|domains|learning-paths|wiki-tags|katex)(?:\/|"|')/.test(html)) {
+  if (/\/Personcal-wiki(?:wiki|domains|knowledge-graph|learning-paths|wiki-tags|katex)(?:\/|"|')/.test(html)) {
     errors.push(`${htmlFile}: 存在缺少斜杠的 GitHub Pages 链接。`);
   }
 }

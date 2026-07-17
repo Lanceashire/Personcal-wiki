@@ -68,6 +68,9 @@ navigation:
   - name: 知识领域
     path: /domains
     icon: ri:grid-fill
+  - name: 知识图谱
+    path: /knowledge-graph
+    icon: ri:share-circle-fill
   - name: 学习路线
     path: /learning-paths
     icon: ri:route-fill

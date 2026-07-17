@@ -17,18 +17,19 @@ const baseHref = (path: string) => sitePath(path, base);
   <p class="wiki-sidebar__label">知识库</p>
   <a href={baseHref('/')}><span>Wiki 首页</span><span>⌂</span></a>
   <a href={baseHref('/domains/')}><span>知识领域</span><span>{groups.size}</span></a>
+  <a href={baseHref('/knowledge-graph/')}><span>知识图谱</span><span>◎</span></a>
   <a href={baseHref('/wiki-tags/')}><span>标签索引</span><span>#</span></a>
   <a href={baseHref('/learning-paths/')}><span>学习路线</span><span>→</span></a>
 
   {[...groups].map(([category, categoryEntries]) => (
-    <section>
-      <p class="wiki-sidebar__label">{category}</p>
+    <details class="wiki-sidebar__group" open={categoryEntries.some((entry) => entry.id === activeId)}>
+      <summary><span>{category}</span><span>{categoryEntries.length}</span></summary>
       {categoryEntries.map((entry) => (
-        <a href={wikiPath(entry, base)} aria-current={entry.id === activeId ? 'page' : undefined}>
-          <span>{entry.data.title}</span>
-          <span>{entry.data.status === 'complete' ? '●' : '○'}</span>
-        </a>
-      ))}
-    </section>
+          <a href={wikiPath(entry, base)} aria-current={entry.id === activeId ? 'page' : undefined}>
+            <span>{entry.data.title}</span>
+            <span>{entry.data.status === 'complete' ? '●' : '○'}</span>
+          </a>
+        ))}
+    </details>
   ))}
 </aside>

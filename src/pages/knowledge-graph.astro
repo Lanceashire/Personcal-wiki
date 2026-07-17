@@ -1,0 +1,36 @@
+---
+import Cover from '@components/ui/cover/Cover.astro';
+import KnowledgeGraphView from '@components/wiki/KnowledgeGraph';
+import WikiSidebar from '@components/wiki/WikiSidebar.astro';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { buildKnowledgeGraphData, getPublicWikiEntries } from '@lib/wiki';
+
+const entries = await getPublicWikiEntries();
+const graph = buildKnowledgeGraphData(entries, import.meta.env.BASE_URL);
+const categories = new Set(graph.nodes.map((node) => node.category)).size;
+---
+
+<Layout title="知识图谱 · Personal Wiki" description="以 Obsidian 风格的双向链接图探索个人知识库中的学习顺序、相关概念和引用关系。">
+  <TwoColumnLayout>
+    <Cover slot="cover" title="知识图谱" />
+    <WikiSidebar slot="sider" entries={entries} />
+    <main class="wiki-shell bg-gradient-start shadow-box p-5 md:p-4">
+      <header class="wiki-graph-header">
+        <p class="wiki-kicker">KNOWLEDGE GRAPH</p>
+        <h1 class="wiki-title">把零散笔记连成知识网络</h1>
+        <p class="wiki-lede">每个圆点是一篇知识条目。实线箭头表示学习顺序，虚线表示相关概念或正文引用；悬停可查看邻接关系，搜索、筛选、缩放后点击节点即可进入条目。</p>
+        <div class="wiki-stats">
+          <div class="wiki-stat"><strong>{graph.nodes.length}</strong><span>知识节点</span></div>
+          <div class="wiki-stat"><strong>{graph.edges.length}</strong><span>显式连接</span></div>
+          <div class="wiki-stat"><strong>{categories}</strong><span>知识领域</span></div>
+        </div>
+      </header>
+      <KnowledgeGraphView client:load {...graph} />
+      <section class="wiki-panel mt-6">
+        <h2>如何阅读这张图</h2>
+        <p>从一个知识点开始，沿箭头查看它的前置和后续内容；沿虚线横向探索相邻概念。图谱只使用条目中明确写下的关系和 Wiki 链接，不凭空推断知识依赖。</p>
+      </section>
+    </main>
+  </TwoColumnLayout>
+</Layout>

@@ -31,9 +31,15 @@ function scanEntries(contentDirectory: string): ScannedEntry[] {
 
 function createIndex(entries: ScannedEntry[]): Map<string, ScannedEntry> {
   const index = new Map<string, ScannedEntry>();
+  const basenames = new Map<string, ScannedEntry[]>();
   for (const entry of entries) {
     const basename = entry.slug.split('/').at(-1) ?? entry.slug;
-    for (const key of [entry.title, ...entry.aliases, entry.slug, basename]) index.set(normalizeWikiKey(key), entry);
+    for (const key of [entry.title, ...entry.aliases, entry.slug]) index.set(normalizeWikiKey(key), entry);
+    const basenameKey = normalizeWikiKey(basename);
+    basenames.set(basenameKey, [...(basenames.get(basenameKey) ?? []), entry]);
+  }
+  for (const [key, matches] of basenames) {
+    if (matches.length === 1 && !index.has(key)) index.set(key, matches[0]);
   }
   return index;
 }
