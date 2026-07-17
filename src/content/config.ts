@@ -1,5 +1,6 @@
 import { defineCollection, z } from 'astro:content';
 import { parseDateInSiteTimezone, reinterpretUtcAsTimezone } from '@lib/date';
+import { glob } from 'astro/loaders';
 import type { BlogSchema, BlogSchemaInput } from 'types/blog';
 
 /**
@@ -55,6 +56,29 @@ const blogCollection = defineCollection({
   }) satisfies z.ZodType<BlogSchema, z.ZodTypeDef, BlogSchemaInput>,
 });
 
+const wikiCollection = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './content' }),
+  schema: z.object({
+    title: z.string().min(1),
+    aliases: z.array(z.string().min(1)).default([]),
+    description: z.string().min(1),
+    category: z.string().min(1),
+    subcategories: z.array(z.string().min(1)).default([]),
+    tags: z.array(z.string().min(1)).default([]),
+    type: z.enum(['concept', 'algorithm', 'method', 'tool', 'project', 'reference']),
+    difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
+    status: z.enum(['seedling', 'developing', 'complete', 'review-needed']),
+    public: z.literal(true),
+    created: dateInSiteTimezone,
+    updated: dateInSiteTimezone,
+    prerequisites: z.array(z.string().min(1)).default([]),
+    related: z.array(z.string().min(1)).default([]),
+    next: z.array(z.string().min(1)).default([]),
+    cover: z.string().optional(),
+  }),
+});
+
 export const collections = {
   blog: blogCollection,
+  wiki: wikiCollection,
 };

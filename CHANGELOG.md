@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- 基于 astro-koharu v4.1.0 建立 Personal Wiki。
+- 增加公开内容 schema、Wikilink、知识关系、反向链接和 Wiki 页面。
+- 增加内容/隐私验证、测试与 GitHub Pages 工作流。
+
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 ---

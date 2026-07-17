@@ -7,7 +7,7 @@ import { MobilePostHeader } from '@components/layout/MobilePostHeader';
 import { MenuIcon } from '@components/ui/MenuIcon';
 import { MAX_WIDTH } from '@constants/layout';
 import { christmasConfig, siteConfig } from 'constants/site-config';
-import { getLocaleFromUrl } from '@/i18n';
+import { getLocaleFromUrl, localizedPath } from '@/i18n';
 import Navigator from './Navigator';
 
 interface Props {
@@ -30,7 +30,7 @@ const locale = getLocaleFromUrl(Astro.url.pathname);
     <a
       transition:persist="page-header-avatar"
       class="tablet:hidden -my-4 mr-4 flex cursor-pointer items-center justify-center gap-1 whitespace-nowrap"
-      href="/"
+      href={localizedPath('/', locale)}
       target="_self"
       title={alternate || title}
       aria-label={alternate || title}

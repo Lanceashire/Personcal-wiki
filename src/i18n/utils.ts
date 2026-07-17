@@ -10,6 +10,18 @@ import { translations } from './translations';
 import { uiStrings as defaultStrings } from './translations/zh';
 import type { Locale, TranslationKey, TranslationParams } from './types';
 
+const basePath = import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
+
+function stripBasePath(pathname: string): string {
+  if (!basePath || !pathname.startsWith(basePath)) return pathname;
+  const stripped = pathname.slice(basePath.length);
+  return stripped.startsWith('/') ? stripped : `/${stripped}`;
+}
+
+function addBasePath(pathname: string): string {
+  return `${basePath}${pathname}` || '/';
+}
+
 /** Replace `{param}` placeholders in a string with provided values. */
 function interpolate(value: string, params?: TranslationParams): string {
   if (!params) return value;
@@ -88,7 +100,7 @@ function tryTranslate(locale: Locale, key: string, params?: TranslationParams): 
  * ```
  */
 export function getLocaleFromUrl(pathname: string): Locale {
-  const segments = pathname.split('/').filter(Boolean);
+  const segments = stripBasePath(pathname).split('/').filter(Boolean);
   const firstSegment = segments[0];
 
   if (firstSegment && firstSegment !== defaultLocale && isLocaleSupported(firstSegment)) {
@@ -116,10 +128,10 @@ export function localizedPath(path: string, locale: Locale = defaultLocale): str
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
   if (locale === defaultLocale) {
-    return normalizedPath;
+    return addBasePath(normalizedPath);
   }
 
-  return `/${locale}${normalizedPath}`;
+  return addBasePath(`/${locale}${normalizedPath}`);
 }
 
 /**
@@ -133,7 +145,8 @@ export function localizedPath(path: string, locale: Locale = defaultLocale): str
  * ```
  */
 export function stripLocaleFromPath(pathname: string): string {
-  const segments = pathname.split('/').filter(Boolean);
+  const pathnameWithoutBase = stripBasePath(pathname);
+  const segments = pathnameWithoutBase.split('/').filter(Boolean);
   const firstSegment = segments[0];
 
   if (firstSegment && firstSegment !== defaultLocale && isLocaleSupported(firstSegment)) {
@@ -141,7 +154,7 @@ export function stripLocaleFromPath(pathname: string): string {
     return rest ? `/${rest}` : '/';
   }
 
-  return pathname;
+  return pathnameWithoutBase;
 }
 
 /**

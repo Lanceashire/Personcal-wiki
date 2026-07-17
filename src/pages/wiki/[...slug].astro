@@ -1,0 +1,109 @@
+---
+import { render } from 'astro:content';
+import CustomContent from '@components/common/CustomContent.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import WikiSidebar from '@components/wiki/WikiSidebar.astro';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import {
+  buildWikiGraph,
+  buildWikiIndex,
+  getPublicWikiEntries,
+  getWikiSlug,
+  resolveWikiEntry,
+  sitePath,
+  wikiPath,
+} from '@lib/wiki';
+
+export async function getStaticPaths() {
+  const entries = await getPublicWikiEntries();
+  return entries.map((entry) => ({ params: { slug: getWikiSlug(entry) }, props: { entryId: entry.id } }));
+}
+
+const { entryId } = Astro.props;
+const entries = await getPublicWikiEntries();
+const entry = entries.find((candidate) => candidate.id === entryId);
+if (!entry) throw new Error(`Wiki entry not found: ${entryId}`);
+
+const { Content } = await render(entry);
+const index = buildWikiIndex(entries);
+const graph = buildWikiGraph(entries);
+const node = graph.get(getWikiSlug(entry));
+const base = import.meta.env.BASE_URL;
+const resolveRefs = (references: string[]) =>
+  references.map((reference) => ({ reference, entry: resolveWikiEntry(reference, index) }));
+const prerequisites = resolveRefs(entry.data.prerequisites);
+const related = resolveRefs(entry.data.related);
+const next = resolveRefs(entry.data.next);
+const keywords = [...new Set([entry.data.category, ...entry.data.subcategories, ...entry.data.tags, ...entry.data.aliases])];
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: entry.data.title,
+  description: entry.data.description,
+  dateCreated: entry.data.created.toISOString(),
+  dateModified: entry.data.updated.toISOString(),
+  keywords,
+  mainEntityOfPage: Astro.url.href,
+};
+---
+
+<Layout title={`${entry.data.title} · Personal Wiki`} description={entry.data.description} keywords={keywords}>
+  <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <link slot="head" rel="stylesheet" href={sitePath('katex/katex.min.css', base)} />
+  <TwoColumnLayout>
+    <Cover slot="cover" title={entry.data.title} />
+    <WikiSidebar slot="sider" entries={entries} activeId={entry.id} />
+    <main class="wiki-shell bg-gradient-start shadow-box p-5 md:p-4">
+      <header data-pagefind-meta={`title:${entry.data.title}`}>
+        <p class="wiki-kicker">{entry.data.category} / {entry.data.type}</p>
+        <h1 class="wiki-title text-5xl">{entry.data.title}</h1>
+        <p class="wiki-lede">{entry.data.description}</p>
+        <div class="wiki-chip-row">
+          {entry.data.aliases.map((alias) => <span class="wiki-chip" data-pagefind-meta={`alias:${alias}`}>{alias}</span>)}
+          {entry.data.tags.map((tag) => (
+            <a class="wiki-chip" href={sitePath(`wiki-tags/${encodeURIComponent(tag)}/`, base)} data-pagefind-filter={`tag:${tag}`}>#{tag}</a>
+          ))}
+        </div>
+      </header>
+
+      <dl class="wiki-infobox" aria-label="条目信息">
+        <div><dt>领域</dt><dd>{entry.data.category}</dd></div>
+        <div><dt>难度</dt><dd>{entry.data.difficulty}</dd></div>
+        <div><dt>状态</dt><dd>{entry.data.status}</dd></div>
+        <div><dt>更新</dt><dd>{entry.data.updated.toISOString().slice(0, 10)}</dd></div>
+      </dl>
+
+      <article class="prose md:prose-sm dark:prose-invert max-w-none" data-pagefind-body>
+        <CustomContent><Content /></CustomContent>
+      </article>
+
+      <section class="wiki-grid mt-8" aria-label="知识关系">
+        <div class="wiki-panel">
+          <h2>前置知识</h2>
+          {prerequisites.length ? prerequisites.map(({ reference, entry: target }) => (
+            target ? <a class="wiki-chip" href={wikiPath(target, base)}>{reference}</a> : <span class="wiki-chip">{reference}（待补充）</span>
+          )) : <p class="wiki-empty">该条目没有声明前置知识。</p>}
+        </div>
+        <div class="wiki-panel">
+          <h2>相关条目</h2>
+          {related.length ? related.map(({ reference, entry: target }) => (
+            target ? <a class="wiki-chip" href={wikiPath(target, base)}>{reference}</a> : <span class="wiki-chip">{reference}（待补充）</span>
+          )) : <p class="wiki-empty">尚未声明横向关联。</p>}
+        </div>
+        <div class="wiki-panel">
+          <h2>后续学习</h2>
+          {next.length ? next.map(({ reference, entry: target }) => (
+            target ? <a class="wiki-chip" href={wikiPath(target, base)}>{reference}</a> : <span class="wiki-chip">{reference}（待补充）</span>
+          )) : <p class="wiki-empty">尚未声明后续学习条目。</p>}
+        </div>
+        <div class="wiki-panel">
+          <h2>反向链接</h2>
+          {node?.linkedFrom.length ? node.linkedFrom.map((source) => (
+            <a class="wiki-chip" href={wikiPath(source, base)}>{source.data.title}</a>
+          )) : <p class="wiki-empty">目前没有其他条目链接到这里。</p>}
+        </div>
+      </section>
+    </main>
+  </TwoColumnLayout>
+</Layout>

@@ -1,34 +1,26 @@
 ---
 layout: ../layouts/PageLayout.astro
-title: "About"
-coverTitle: "关于我"
-date: 2025-01-03 01:01:33
-description: "关于我？"
+title: 关于这座知识库
+description: Personal Wiki 的定位、维护方式与隐私边界。
+coverTitle: About Personal Wiki
+comments: false
 ---
 
-## 你好，这里是余弦
+# 关于这座知识库
 
-[![github badge](https://img.shields.io/badge/dynamic/json?color=blue&label=Github&query=%24.data.totalSubs&url=https%3A%2F%2Fapi.spencerwoo.com%2Fsubstats%2F%3Fsource%3Dgithub%26queryKey%3Dyusixian)](https://github.com/yusixian)
+Personal Wiki 是一个以 Obsidian Markdown 为原始知识接口、由 Codex 或 Claude 通过 Git Diff 增量维护、最终部署到 GitHub Pages 的静态个人知识库。
 
-cosine = 余弦 = cos
+## 它不是什么
 
-愿热情永存，愿热爱不灭，愿生活无憾
+- 不是 Obsidian 插件。
+- 不是在线编辑器、用户系统或数据库。
+- 不会自动上传完整本地 Vault。
+- 不把模型猜测的知识关系静默写成事实。
 
-> 我们 都只是无名之辈 \
-> 做你自己最喜欢的事 \
-> 像花一样 肆意绽放 \
-> 不去管 有没有人欣赏
+## 维护闭环
 
-### 找到我
+用户选择并提交公开笔记后，Agent 检查差异、Frontmatter、条目完整度、Wikilink 与资源，再运行类型检查、测试、内容验证和静态构建。合并到 `main` 后，GitHub Actions 发布 GitHub Pages。
 
-个人 Telegram 前端频道：日常碎碎念，偶尔掉落优质前端博文推荐、学习资源等
+## 开源与署名
 
-https://t.me/cosine_front_end
-
-Gitbook 前端学习记录
-
-https://book.cosine.ren/
-
-[![GitHub State](https://git-stats.cosine.ren/api?username=yusixian&theme=dark&show_icons=true&hide_border=true)](https://github.com/anuraghazra/github-readme-stats)
-
-[![GitHub Streak](https://github-readme-streak-stats-rust-tau.vercel.app?user=yusixian&theme=dark&date_format=%5BY%20%5DM%20&hide_border=true)](https://git.io/streak-stats)
+本站基于 [astro-koharu](https://github.com/cosZone/astro-koharu) v4.1.0 二次开发，依照 AGPL-3.0 发布。上游署名与修改说明见仓库中的 `THIRD_PARTY_NOTICES.md`。

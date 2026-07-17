@@ -1,0 +1,33 @@
+---
+import Cover from '@components/ui/cover/Cover.astro';
+import WikiSidebar from '@components/wiki/WikiSidebar.astro';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { getPublicWikiEntries, wikiPath } from '@lib/wiki';
+
+export async function getStaticPaths() {
+  const entries = await getPublicWikiEntries();
+  const tags = new Set(entries.flatMap((entry) => entry.data.tags));
+  return [...tags].map((tag) => ({ params: { tag }, props: { tag } }));
+}
+
+const { tag } = Astro.props;
+const entries = await getPublicWikiEntries();
+const taggedEntries = entries.filter((entry) => entry.data.tags.includes(tag));
+const base = import.meta.env.BASE_URL;
+---
+
+<Layout title={`#${tag} · Personal Wiki`} description={`标签 ${tag} 下的知识条目。`}>
+  <TwoColumnLayout>
+    <Cover slot="cover" title={`#${tag}`} />
+    <WikiSidebar slot="sider" entries={entries} />
+    <main class="wiki-shell bg-gradient-start shadow-box p-5 md:p-4">
+      <p class="wiki-kicker">Tag</p><h1 class="wiki-title text-5xl">#{tag}</h1>
+      <section class="wiki-grid mt-8" data-pagefind-body>
+        {taggedEntries.map((entry) => (
+          <a class="wiki-card no-underline" href={wikiPath(entry, base)}><h2>{entry.data.title}</h2><p>{entry.data.description}</p></a>
+        ))}
+      </section>
+    </main>
+  </TwoColumnLayout>
+</Layout>

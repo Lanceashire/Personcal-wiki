@@ -31,6 +31,7 @@ import { remarkShokaRuby } from './src/lib/markdown/remark-shoka-ruby.ts';
 import { remarkShokaSpoiler } from './src/lib/markdown/remark-shoka-spoiler.ts';
 import { shokaMetaTransformer } from './src/lib/markdown/shiki-meta-transformer.ts';
 import { normalizeUrl } from './src/lib/utils.ts';
+import { remarkWikiLinks } from './src/lib/wiki/remark-wikilinks.ts';
 
 // Load YAML config directly with Node.js (before Vite plugins are available)
 // This is only used in astro.config.mjs - other files use @rollup/plugin-yaml
@@ -41,6 +42,7 @@ function loadConfigForAstro() {
 }
 
 const yamlConfig = loadConfigForAstro();
+const pagesBase = process.env.PUBLIC_BASE_PATH ?? '/Personcal-wiki';
 
 // Bundle analysis mode: ANALYZE=true pnpm build
 // Use loadEnv to read .env file (astro.config.mjs runs before Vite loads .env)
@@ -141,6 +143,13 @@ remarkPlugins.push([
     previewCacheTime: contentConfig.previewCacheTime ?? 30,
   },
 ]);
+remarkPlugins.push([
+  remarkWikiLinks,
+  {
+    contentDirectory: path.join(process.cwd(), 'content'),
+    base: pagesBase,
+  },
+]);
 
 // Rehype plugins — order matters
 const rehypePlugins = [
@@ -171,7 +180,8 @@ if (contentConfig.enableCodeMeta !== false) shikiTransformers.push(shokaMetaTran
 
 // https://astro.build/config
 export default defineConfig({
-  site: yamlConfig.site.url,
+  site: process.env.PUBLIC_SITE_URL ?? 'https://lanceashire.github.io',
+  base: pagesBase,
   compressHTML: true,
   markdown: {
     // Enable GitHub Flavored Markdown

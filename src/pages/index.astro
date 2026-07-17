@@ -1,75 +1,66 @@
 ---
-import HomeSider from '@components/layout/HomeSider.astro';
-import PostList from '@components/post/PostList.astro';
 import Cover from '@components/ui/cover/Cover.astro';
-import { CONTENT_PADDING, PAGINATION } from '@constants/layout';
-import { seoConfig, siteConfig } from '@constants/site-config';
+import WikiSidebar from '@components/wiki/WikiSidebar.astro';
 import Layout from '@layouts/Layout.astro';
 import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
-import { getHomePagePosts } from '@lib/content';
-import { toPostCardDataList } from '@lib/content/transforms';
-import type { Page } from 'astro';
-import type { BlogPost } from 'types/blog';
-import CategoryCards from '@/components/post/CategoryCards.astro';
-import Divider from '@/components/ui/divider';
-import { getLocaleFromUrl, localizedPath, t } from '@/i18n';
+import { buildWikiGraph, getPublicWikiEntries, groupWikiEntries, sitePath, wikiPath } from '@lib/wiki';
 
-const locale = getLocaleFromUrl(Astro.url.pathname);
-
-// 使用优化的单次查询获取所有首页数据
-const { highlightedPosts, stickyPosts: normalStickyPosts, regularPosts } = await getHomePagePosts(locale);
-
-// 将高亮系列文章放在置顶列表开头（转换为卡片数据）
-const stickyPosts = toPostCardDataList([...highlightedPosts, ...normalStickyPosts], locale);
-
-// 首页显示前N篇普通文章（不含系列文章）
-const { pageSize } = PAGINATION;
-const regularPostsSlice = regularPosts.slice(0, pageSize);
-const posts = toPostCardDataList(regularPostsSlice, locale);
-const totalRegularPosts = regularPosts.length;
-
-const homeUrl = localizedPath('/', locale);
-const postsBaseUrl = localizedPath('/posts', locale);
-
-const page: Page<BlogPost> = {
-  data: regularPostsSlice,
-  start: 0,
-  end: Math.min(pageSize - 1, regularPostsSlice.length - 1),
-  size: pageSize,
-  total: totalRegularPosts,
-  currentPage: 1,
-  lastPage: Math.ceil(totalRegularPosts / pageSize),
-  url: {
-    current: homeUrl,
-    prev: undefined,
-    next: totalRegularPosts > pageSize ? `${postsBaseUrl}/2` : undefined,
-    first: homeUrl,
-    last: `${postsBaseUrl}/${Math.ceil(totalRegularPosts / pageSize)}`,
-  },
-};
+const entries = await getPublicWikiEntries();
+const groups = groupWikiEntries(entries);
+const graph = buildWikiGraph(entries);
+const relationshipCount = [...graph.values()].reduce((total, node) => total + node.linksTo.length, 0);
+const recentlyUpdated = [...entries].sort((a, b) => b.data.updated.getTime() - a.data.updated.getTime()).slice(0, 6);
+const base = import.meta.env.BASE_URL;
+const baseHref = (path: string) => sitePath(path, base);
 ---
 
-<Layout title={seoConfig.title}>
+<Layout title="Personal Wiki · 个人知识库" description="由 Obsidian Markdown 驱动、经 Agent 维护的游戏 Wiki 风格个人知识库。">
   <TwoColumnLayout>
-    <Cover slot="cover" />
-    <HomeSider slot="sider" />
-    <div
-      class={`bg-gradient-start shadow-box tablet:shadow-none flex flex-col gap-4 overflow-hidden  ${CONTENT_PADDING.standard}`}
-    >
-      {stickyPosts.length > 0 && (
-        <>
-          <Divider>{t(locale, 'post.stickyPosts')}</Divider>
-          <PostList posts={stickyPosts} showPaginator={false} />
-        </>
-      )}
-      <Divider>{t(locale, 'post.postList')}</Divider>
-      <PostList posts={posts} page={page} showPaginator={true} baseUrl={postsBaseUrl} isHomePage={true} />
-      {!!siteConfig?.featuredCategories?.length && (
-        <>
-          <Divider className="mt-6">{t(locale, 'post.featuredCategories')}</Divider>
-          <CategoryCards />
-        </>
-      )}
-    </div>
+    <Cover slot="cover" title="Personal Wiki" />
+    <WikiSidebar slot="sider" entries={entries} />
+    <main class="wiki-shell bg-gradient-start shadow-box p-5 md:p-4" data-pagefind-body>
+      <section class="wiki-hero">
+        <p class="wiki-kicker">Obsidian × Astro × Agent</p>
+        <h1 class="wiki-title">把零散笔记，锻造成可探索的知识世界。</h1>
+        <p class="wiki-lede">
+          这里不是按时间倒序排列的博客，而是一座由领域、前置知识、相关条目和学习路线共同组成的静态 Wiki。
+          公开内容来自仓库中的 <code>content/</code>，未经明确公开的本地笔记不会进入构建结果。
+        </p>
+        <div class="wiki-actions">
+          <a class="wiki-button wiki-button--primary" href={baseHref('/domains/')}>探索知识领域</a>
+          <a class="wiki-button" href={baseHref('/learning-paths/')}>查看学习路线</a>
+        </div>
+      </section>
+
+      <section class="wiki-stats" aria-label="知识库统计">
+        <div class="wiki-stat"><strong>{entries.length}</strong><span>公开条目</span></div>
+        <div class="wiki-stat"><strong>{groups.size}</strong><span>知识领域</span></div>
+        <div class="wiki-stat"><strong>{relationshipCount}</strong><span>显式知识关系</span></div>
+      </section>
+
+      <h2 class="wiki-section-title">知识领域</h2>
+      <section class="wiki-grid">
+        {[...groups].map(([category, categoryEntries]) => (
+          <a class="wiki-card no-underline" href={baseHref(`/domains/${encodeURIComponent(category)}/`)}>
+            <h2>{category}</h2>
+            <p>{categoryEntries.map((entry) => entry.data.title).slice(0, 3).join('、')}</p>
+            <div class="wiki-card__meta"><span>{categoryEntries.length} 个条目</span><span>进入领域 →</span></div>
+          </a>
+        ))}
+      </section>
+
+      <h2 class="wiki-section-title">最近维护</h2>
+      <section class="wiki-grid">
+        {recentlyUpdated.map((entry) => (
+          <a class="wiki-card no-underline" href={wikiPath(entry, base)}>
+            <h3>{entry.data.title}</h3>
+            <p>{entry.data.description}</p>
+            <div class="wiki-card__meta">
+              <span>{entry.data.category}</span><span>{entry.data.difficulty}</span><span>{entry.data.updated.toISOString().slice(0, 10)}</span>
+            </div>
+          </a>
+        ))}
+      </section>
+    </main>
   </TwoColumnLayout>
 </Layout>

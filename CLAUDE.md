@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> Personal Wiki fork：本仓库已从博客主题改造成静态知识库。开始任何任务前还必须阅读根目录的 `AGENTS.md`、`CONTENT_SCHEMA.md` 与 `WIKI_STYLE_GUIDE.md`。公开内容入口是 `content/`，不得把完整本地 Obsidian Vault 上传到仓库。Wiki 架构变化时同步更新 `ARCHITECTURE.md` 与本文件。
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview

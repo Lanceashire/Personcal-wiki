@@ -1,0 +1,37 @@
+---
+import Cover from '@components/ui/cover/Cover.astro';
+import WikiSidebar from '@components/wiki/WikiSidebar.astro';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { getPublicWikiEntries, groupWikiEntries, wikiPath } from '@lib/wiki';
+
+export async function getStaticPaths() {
+  const groups = groupWikiEntries(await getPublicWikiEntries());
+  return [...groups].map(([category]) => ({ params: { domain: category }, props: { category } }));
+}
+
+const { category } = Astro.props;
+const entries = await getPublicWikiEntries();
+const domainEntries = entries.filter((entry) => entry.data.category === category);
+const base = import.meta.env.BASE_URL;
+---
+
+<Layout title={`${category} · Personal Wiki`} description={`${category}领域的知识条目。`}>
+  <TwoColumnLayout>
+    <Cover slot="cover" title={category} />
+    <WikiSidebar slot="sider" entries={entries} />
+    <main class="wiki-shell bg-gradient-start shadow-box p-5 md:p-4">
+      <p class="wiki-kicker">Knowledge Domain</p>
+      <h1 class="wiki-title text-5xl">{category}</h1>
+      <p class="wiki-lede">本领域收录 {domainEntries.length} 个公开条目。</p>
+      <section class="wiki-grid mt-8" data-pagefind-body>
+        {domainEntries.map((entry) => (
+          <a class="wiki-card no-underline" href={wikiPath(entry, base)}>
+            <h2>{entry.data.title}</h2><p>{entry.data.description}</p>
+            <div class="wiki-card__meta"><span>{entry.data.type}</span><span>{entry.data.difficulty}</span><span>{entry.data.status}</span></div>
+          </a>
+        ))}
+      </section>
+    </main>
+  </TwoColumnLayout>
+</Layout>
