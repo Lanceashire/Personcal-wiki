@@ -1,0 +1,117 @@
+site:
+  title: 个人知识库
+  alternate: Personal Wiki
+  subtitle: 把零散笔记锻造成可探索的知识世界
+  name: Lanceashire
+  description: 由 Obsidian Markdown 提供内容、由 Agent 持续维护的游戏 Wiki 风格个人知识库。
+  avatar: /img/avatar.webp
+  showLogo: false
+  author: Lanceashire
+  url: https://lanceashire.github.io/Personcal-wiki
+  defaultOgImage: /img/avatar.webp
+  startYear: 2026
+  timezone: Asia/Shanghai
+  keywords:
+    - 个人知识库
+    - Wiki
+    - Obsidian
+    - Astro
+    - 学习笔记
+
+i18n:
+  defaultLocale: zh
+  locales:
+    - code: zh
+      label: 中文
+
+categoryMap: {}
+featuredCategories: []
+featuredSeries: []
+
+social:
+  github:
+    url: https://github.com/Lanceashire/Personcal-wiki
+    icon: ri:github-fill
+    color: '#191717'
+  rss:
+    url: /rss.xml
+    icon: ri:rss-line
+    color: '#ff6600'
+
+content:
+  addBlankTarget: true
+  smoothScroll: true
+  addHeadingLevel: true
+  enhanceCodeBlock: true
+  enableCodeCopy: true
+  enableCodeFullscreen: true
+  enableLinkEmbed: false
+  enableTweetEmbed: false
+  enableOGPreview: false
+  previewCacheTime: 30
+  lazyLoadEmbeds: true
+  enableShokaContainers: true
+  enableShokaEffects: true
+  enableShokaSpoiler: true
+  enableShokaRuby: true
+  enableShokaAttrs: true
+  enableShokaHexoTags: true
+  enableMath: true
+  enableCodeMeta: true
+  enableQuiz: true
+  enableEncryptedBlock: false
+
+navigation:
+  - name: Wiki 首页
+    path: /
+    icon: ri:home-heart-fill
+  - name: 知识领域
+    path: /domains
+    icon: ri:grid-fill
+  - name: 学习路线
+    path: /learning-paths
+    icon: ri:route-fill
+  - name: 标签索引
+    path: /wiki-tags
+    icon: fa6-solid:tags
+  - name: 关于
+    path: /about
+    icon: fa6-regular:circle-user
+
+comment:
+  provider: none
+
+analytics:
+  umami:
+    enabled: false
+
+seo:
+  robots:
+    policy:
+      - userAgent: '*'
+        allow: /
+
+bgm:
+  enabled: false
+  audio: []
+
+christmas:
+  enabled: false
+  features:
+    snowfall: false
+    christmasColorScheme: false
+    christmasCoverDecoration: false
+    christmasHat: false
+    readingTimeSnow: false
+  snowfall:
+    speed: 0.5
+    intensity: 0.4
+    mobileIntensity: 0.2
+    maxLayers: 4
+    maxIterations: 5
+    mobileMaxLayers: 2
+    mobileMaxIterations: 3
+
+dev:
+  contentRelativePath: content
+  editors: []

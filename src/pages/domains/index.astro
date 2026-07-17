@@ -1,0 +1,32 @@
+---
+import Cover from '@components/ui/cover/Cover.astro';
+import WikiSidebar from '@components/wiki/WikiSidebar.astro';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { getPublicWikiEntries, groupWikiEntries, sitePath } from '@lib/wiki';
+
+const entries = await getPublicWikiEntries();
+const groups = groupWikiEntries(entries);
+const base = import.meta.env.BASE_URL;
+---
+
+<Layout title="知识领域 · Personal Wiki" description="按领域浏览个人知识库。">
+  <TwoColumnLayout>
+    <Cover slot="cover" title="知识领域" />
+    <WikiSidebar slot="sider" entries={entries} />
+    <main class="wiki-shell bg-gradient-start shadow-box p-5 md:p-4" data-pagefind-ignore>
+      <p class="wiki-kicker">Knowledge Domains</p>
+      <h1 class="wiki-title text-5xl">知识领域</h1>
+      <p class="wiki-lede">从学科领域进入，再沿着主题、前置知识与关联条目继续探索。</p>
+      <section class="wiki-grid mt-8">
+        {[...groups].map(([category, categoryEntries]) => (
+          <a class="wiki-card no-underline" href={sitePath(`domains/${encodeURIComponent(category)}/`, base)}>
+            <h2>{category}</h2>
+            <p>{categoryEntries.map((entry) => entry.data.title).join('、')}</p>
+            <div class="wiki-card__meta"><span>{categoryEntries.length} 个条目</span></div>
+          </a>
+        ))}
+      </section>
+    </main>
+  </TwoColumnLayout>
+</Layout>
