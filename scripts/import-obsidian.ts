@@ -463,7 +463,10 @@ function transformBody(
   });
 
   const overview = `## 条目概览\n\n${record.description}`;
-  const normalizedBody = transformedLines.join('\n').replace(/[ \t]+$/gm, '').trim();
+  const normalizedBody = transformedLines
+    .join('\n')
+    .replace(/[ \t]+$/gm, '')
+    .trim();
   return { body: `${overview}\n\n${normalizedBody}\n`, outgoing: unique(outgoing) };
 }
 
